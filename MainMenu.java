@@ -1,100 +1,85 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.event.*;
+import java.io.*;
 
 public class MainMenu implements ActionListener {
-    JFrame box;
-    JMenu menu;
-    JMenuBar topBar;
-    JMenuItem open, save, exit;
-    JMenuItem option4, option5;
-    JMenu submenu = new JMenu("submenu");
-    Toolbar toolbar;
-    JPanel top = new JPanel();
-    JPanel left = new JPanel();
-    JList sidebar;
+    private JTextArea textArea;
+    private Toolbar toolbar;
+    private FsUtils fileUtility;
+    private JList<String> fileList;
+    private DefaultListModel<String> listModel;
+    private File selectedFile;
 
-    MainMenu(){
-        init();
-        box.setVisible(true);
+    public void initGUI() {
+        JFrame frame = new JFrame("Odczyt i zapis pliku");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 400);
+
+        createComponents(frame);
+        setLayout(frame);
+        setListeners();
+
+        populateFileList();
+        
+        frame.setVisible(true);
     }
 
+    private void createComponents(JFrame frame) {
+        textArea = new JTextArea();
+        listModel = new DefaultListModel<>();
+        fileList = new JList<>(listModel);
+        fileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-    private void init(){
-        box = new JFrame("Zadanie");
-        box.setSize(new Dimension(500, 300));
-        box.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        initTopBar();
-        toolbar = new Toolbar(topBar);
-        initTopPanel();
-        box.add(top, BorderLayout.PAGE_START);
-        initLeftPanel();
-        box.add(left, BorderLayout.LINE_START);
+        toolbar = new Toolbar(this);
+        fileUtility = new FsUtils(textArea, fileList, listModel, this);
     }
 
-    private void initTopBar(){
-        topBar = new JMenuBar();
-        menu = new JMenu("Plik");
+    private void setLayout(JFrame frame) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(new JScrollPane(textArea), BorderLayout.CENTER);
 
-        open = new JMenuItem("Otwórz");
-        open.addActionListener(this);
-        menu.add(open);
+        JPanel sidebarPanel = new JPanel(new BorderLayout());
+        sidebarPanel.setBorder(BorderFactory.createTitledBorder("Pliki"));
+        sidebarPanel.setPreferredSize(new Dimension(150, frame.getHeight()));
+        sidebarPanel.add(new JScrollPane(fileList), BorderLayout.CENTER);
 
-        save = new JMenuItem("Zapisz");
-        save.addActionListener(this);
-        menu.add(save);
+        panel.add(sidebarPanel, BorderLayout.WEST);
 
-
-        option4 = new JMenuItem("Opcja4");
-        option4.addActionListener(this);
-        option5 = new JMenuItem("Opcja5");
-        option5.addActionListener(this);
-        submenu.add(option4);
-        submenu.add(option5);
-        menu.add(submenu);
-
-        exit = new JMenuItem("Wyjście");
-        exit.addActionListener(this);
-        menu.add(exit);
-        topBar.add(menu);
+        frame.add(toolbar.getToolBar(), BorderLayout.NORTH);
+        frame.add(panel, BorderLayout.CENTER);
     }
 
-    private void initTopPanel(){
-        top.setLayout(new GridLayout(2, 1));
-        top.add(topBar);
-        top.add(toolbar);
+    private void setListeners() {
+        
     }
 
-    private void initLeftPanel(){
-        String []items = {"pusty-plik.txt", "plik1.txt", "plik2.txt", "dokument5.txt"};
-        sidebar = new JList(items);
-        left.add(sidebar);
+    private void populateFileList() {
+        File currentFolder = new File(".");
+        File[] files = currentFolder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    listModel.addElement(file.getName());
+                }
+            }
+        }
     }
 
     @Override
-    public void actionPerformed(ActionEvent e){
-        Object src = e.getSource();
-        if(src == this.open){
-            topBar.setBackground(Color.RED);
-        }
-        if(src == save){
-            topBar.setBackground(Color.GREEN);
-        }
-        if(src == option4){
-            topBar.setBackground(Color.BLUE);
-        }
-        if(src == option5){
-            topBar.setBackground(Color.YELLOW);
-        }
-        if(src == exit){
-            box.dispose();
-        }
-    }
+    public void actionPerformed(ActionEvent e) {
+        Object source = e.getSource();
 
-    public static void main(String[] args) {
-        new MainMenu();
+        if (source == toolbar.getOpenButton()) {
+            fileUtility.openSelectedFile();
+        } else if (source == toolbar.getSaveButton()) {
+            fileUtility.saveFile();
+        } else if (source == toolbar.getExitButton()) {
+            System.exit(0);
+        } else if (source == toolbar.getCopyButton()) {
+           
+        } else if (source == toolbar.getPasteButton()) {
+       
+        }
     }
 }
